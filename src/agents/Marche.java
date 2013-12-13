@@ -9,6 +9,11 @@ import java.util.List;
 
 import pojo.EnchereMarche;
 
+/**
+ * 
+ * @author simeon
+ *
+ */
 public class Marche extends Agent{
 	
 	private List<EnchereMarche> _list_offres;
