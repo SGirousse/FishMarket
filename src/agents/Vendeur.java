@@ -4,22 +4,19 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.FSMBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
-import jade.core.behaviours.TickerBehaviour;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
-import jade.proto.ContractNetInitiator;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.TimerTask;
-import java.util.Vector;
 
 import pojo.Enchere;
+import pojo.EnchereVendeur;
 
 public class Vendeur  extends Agent {
 
-	private List<Enchere> _encheres;
+	private List<EnchereVendeur> _encheres;
 	private AID _marche;
 		
 	protected void setup(){
@@ -29,8 +26,8 @@ public class Vendeur  extends Agent {
 	  		
 	  		_marche = new AID((String)args[0], AID.ISLOCALNAME);
 	  		
-	  		_encheres = new ArrayList<Enchere>();
-	  		_encheres.add(new Enchere("GoldenFish", 42.42f, getAID()));
+	  		_encheres = new ArrayList<EnchereVendeur>();
+	  		_encheres.add(new EnchereVendeur(new ArrayList<AID>(), "GoldenFish", 42.42f, getAID()));
 				
 			addBehaviour(new VendeurBehaviour(_encheres.get(0)));
 	  	}else{

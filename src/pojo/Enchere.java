@@ -2,7 +2,7 @@ package pojo;
 
 import jade.core.AID;
 
-public class Enchere {
+public class Enchere implements Comparable<Enchere>{
 	private String _name;
 	private float _init_price;
 	private float _current_price;
@@ -37,7 +37,7 @@ public class Enchere {
 		return _name;
 	}
 	
-	public AID getAID(){
+	public AID getVendeur(){
 		return _vendeur;
 	}
 	
@@ -48,4 +48,14 @@ public class Enchere {
 	public void setBidCount(int bidCount){
 		_bidCount=bidCount;
 	}
+
+	@Override
+	public int compareTo(Enchere o) {		
+		if(_name.compareTo(o.getName())==0 && _vendeur.compareTo(o.getVendeur())==0){
+			return 1;
+		}else{
+			return -1;
+		}
+	}
+	
 }

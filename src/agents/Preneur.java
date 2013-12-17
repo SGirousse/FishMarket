@@ -1,13 +1,16 @@
 package agents;
 
-import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.OneShotBehaviour;
+import jade.core.AID;
+import jade.core.behaviours.*;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.domain.DFService;
+import jade.domain.FIPAException;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
 
 import java.util.List;
-
-import listeners.PreneurEnchereAdapter;
-import listeners.PreneurEnchereListener;
 
 import pojo.Enchere;
 
@@ -16,13 +19,18 @@ public class Preneur extends Agent {
 	private Float _money;
 	private List<Enchere> _encheres;
 	private AID _marche;
-	private PreneurEnchereListener _listener;
 	
 	protected void setup(){
 	  	Object[] args = getArguments();
 	  	if (args != null && args.length > 0) {
 	  		System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : Arrivee de l'acheteur");
 	  		_marche = new AID((String)args[0], AID.ISLOCALNAME);
+	  		
+	  		ACLMessage subscribeMsg = new ACLMessage(ACLMessage.CFP);
+	  		subscribeMsg.addReceiver(_marche);
+	  		subscribeMsg.setContent("3"+getAID());
+	  		subscribeMsg.setConversationId("abonnement-marche");
+	  		send(subscribeMsg);
 	  		
 	  		addBehaviour(new AbonnementMarcheBehaviour());
 	  		
@@ -42,9 +50,8 @@ public class Preneur extends Agent {
 
 		@Override
 		public void action() {
-	  		_listener = new PreneurEnchereAdapter() {
-	  			
-			};
+	  		// Abonnement aupres du marche
+			
 			// Demande des offres
 			
 			// Attente de la reponse
