@@ -92,7 +92,7 @@ public class Vendeur  extends Agent {
 			// Fill the CFP message
 	  		ACLMessage msg = new ACLMessage(ACLMessage.CFP);
 	  		msg.addReceiver(_marche);
-			msg.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
+			//msg.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
 			// We want to receive a reply in 10 seconds
 			msg.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
 			msg.setContent("Nouvelle enchere (enfin la c'est que du texte, ptdr)");
