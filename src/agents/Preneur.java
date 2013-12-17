@@ -1,11 +1,13 @@
 package agents;
 
+import gui.PreneurGUI;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.FSMBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import pojo.Enchere;
@@ -15,6 +17,7 @@ public class Preneur extends Agent {
 	private Float _money;
 	private List<Enchere> _encheres;
 	private AID _marche;
+	private PreneurGUI _preneurGUI;
 	
 	protected void setup(){
 	  	Object[] args = getArguments();
@@ -23,6 +26,11 @@ public class Preneur extends Agent {
 	  		
 	  		_marche = new AID((String)args[0], AID.ISLOCALNAME);
 	  		//_money = Float.valueOf((String)args[1]);
+	  		
+	  		_encheres = new ArrayList<Enchere>();
+	  		
+	  		_preneurGUI = new PreneurGUI(this);
+	  		_preneurGUI.showGui();
 	  	  		
 	  		addBehaviour(new AbonnementMarcheBehaviour());
 	  		addBehaviour(new PreneurBehaviour());
@@ -44,6 +52,10 @@ public class Preneur extends Agent {
 		_money = null;
 		
 		System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : Depart de l'acheteur");
+	}
+	
+	public List<Enchere> getEncheres(){
+		return _encheres;
 	}
 	
 	private class AbonnementMarcheBehaviour extends OneShotBehaviour {

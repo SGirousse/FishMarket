@@ -1,5 +1,6 @@
 package agents;
 
+import gui.VendeurGUI;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.FSMBehaviour;
@@ -14,10 +15,11 @@ import java.util.List;
 import pojo.Enchere;
 import pojo.EnchereVendeur;
 
-public class Vendeur  extends Agent {
+public class Vendeur extends Agent {
 
 	private List<EnchereVendeur> _encheres;
 	private AID _marche;
+	private VendeurGUI _vendeurGUI;
 		
 	protected void setup(){
 	  	Object[] args = getArguments();
@@ -28,6 +30,9 @@ public class Vendeur  extends Agent {
 	  		
 	  		_encheres = new ArrayList<EnchereVendeur>();
 	  		_encheres.add(new EnchereVendeur(new ArrayList<AID>(), "GoldenFish", 42.42f, getAID()));
+	  		
+	  		_vendeurGUI = new VendeurGUI(this);
+	  		_vendeurGUI.showGui();
 				
 			addBehaviour(new VendeurBehaviour(_encheres.get(0)));
 	  	}else{
@@ -37,13 +42,21 @@ public class Vendeur  extends Agent {
 	}
 	
 	protected void takeDown(){
-		
+		System.out.println("Vendeur ** TRACE ** "+getAID().getName()+" : Depart du vendeur");
+	}
+	
+	public void newOffer(String title, float price){
+		_encheres.add(new EnchereVendeur(null, title, price, getAID()));
+	}
+	
+	public List<EnchereVendeur> getEncheres(){
+		return _encheres;
 	}
 	
 	private class VendeurBehaviour extends FSMBehaviour{
 		private Enchere _e;
 		
-		private static final String STATE_TOANNOUNCE = "STATE_TOANNOUCE";
+		private static final String STATE_TOANNOUNCE = "STATE_TOANNOUNCE";
 		private static final String STATE_TOWAITFORBID = "STATE_TOWAITFORBID";
 		private static final String STATE_TOATTRIBUTE = "STATE_TOATTRIBUTE";
 		private static final String STATE_TOGIVE = "STATE_TOGIVE";

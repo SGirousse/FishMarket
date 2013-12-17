@@ -138,7 +138,7 @@ public class Marche extends Agent{
 					case TO_UNSUBSCRIBE:
 						System.out.println("Marche ** TRACE ** "+getAID().getName()+" : desabonnement");
 						
-						preneur = new AID(contMsg.substring(1));
+						preneur = msg.getSender();
 						p=0;
 						pFound=false;
 						while(p<_list_preneurs_abonnes.size() && !pFound){
