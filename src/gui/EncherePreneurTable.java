@@ -5,7 +5,7 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import pojo.Enchere;
-import pojo.EnchereVendeur;
+import agents.Preneur;
 
 /**
  * Tableau des enchères de l'acheteur.
@@ -50,8 +50,12 @@ public class EncherePreneurTable extends AbstractTableModel {
         }
 	}
 	
-    public void addEnchere(EnchereVendeur enchere) {
+    public void addEnchere(Enchere enchere) {
         fireTableRowsInserted(_encheres.size()-1, _encheres.size()-1);
+    }
+    
+    public Enchere getEnchere(int i) {
+    	return _encheres.get(i);
     }
  
     public void removeEnchere(int rowIndex) {

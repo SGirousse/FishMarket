@@ -65,7 +65,7 @@ public class Preneur extends Agent {
 	  		// Abonnement aupres du marche
 	  		ACLMessage subscribeMsg = new ACLMessage(ACLMessage.INFORM);
 	  		subscribeMsg.addReceiver(_marche);
-	  		subscribeMsg.setContent("3"+getAID());
+	  		subscribeMsg.setContent("3"+getAID().getName());
 	  		subscribeMsg.setConversationId("abonnement-marche");
 	  		send(subscribeMsg);		
 		}
@@ -104,6 +104,7 @@ public class Preneur extends Agent {
 			
 			if(msg!=null){
 				System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : "+msg.getContent());
+				
 			}
 		}
 		

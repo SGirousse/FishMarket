@@ -4,9 +4,12 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import javax.swing.AbstractAction;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -44,7 +47,11 @@ public class PreneurGUI extends JFrame{
 		
 		_modele = new EncherePreneurTable(_preneur_agent.getEncheres());
 		_tableau = new JTable(_modele);
-		getContentPane().add(new JScrollPane(_tableau), BorderLayout.SOUTH);
+		getContentPane().add(new JScrollPane(_tableau), BorderLayout.CENTER);
+		
+        p = new JPanel();
+        p.add(new JButton(new BidAction()));
+        getContentPane().add(p, BorderLayout.SOUTH);
 		
 		// Make the agent terminate when the user closes 
 		// the GUI using the button on the upper right corner	
@@ -65,4 +72,24 @@ public class PreneurGUI extends JFrame{
 		setLocation(centerX - getWidth() / 2, centerY - getHeight() / 2);
 		super.setVisible(true);
 	}
+	
+	private class BidAction extends AbstractAction {
+		
+		private BidAction() {
+			super("Encherir");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			if(_tableau.getRowCount()>0){
+	            int[] selection = _tableau.getSelectedRows();
+	            
+	            //On ne considere que la premiere enchere selectionnee (pas de multiples encheres)
+	            _enchereName.setText(_modele.getEnchere(selection[0]).getName());
+	            _encherePrice.setText(String.valueOf(_modele.getEnchere(selection[0]).getCurrentPrice()));
+			}
+		}
+		
+	}
+	
 }

@@ -36,7 +36,7 @@ public class Vendeur extends Agent {
 				
 			addBehaviour(new VendeurBehaviour(_encheres.get(0)));
 	  	}else{
-	  		System.out.println("Vendeur ** ERROR ** "+getAID().getName()+" : nom du marché manquant.");
+	  		System.out.println("Vendeur ** ERROR ** "+getAID().getName()+" : nom du marche manquant.");
 	  		doDelete();
 	  	}
 	}
@@ -74,8 +74,9 @@ public class Vendeur extends Agent {
 			
 			//Register transitions
 			this.registerDefaultTransition(STATE_TOANNOUNCE,STATE_TOWAITFORBID);
-			this.registerTransition(STATE_TOWAITFORBID,STATE_TOANNOUNCE,0);
-			this.registerTransition(STATE_TOWAITFORBID,STATE_TOATTRIBUTE,1);
+			this.registerTransition(STATE_TOWAITFORBID,STATE_TOWAITFORBID,0);
+			this.registerTransition(STATE_TOWAITFORBID,STATE_TOANNOUNCE,1);
+			this.registerTransition(STATE_TOWAITFORBID,STATE_TOATTRIBUTE,2);
 			this.registerDefaultTransition(STATE_TOATTRIBUTE,STATE_TOGIVE);
 			this.registerDefaultTransition(STATE_TOGIVE,STATE_TOFINISH);
 		}
@@ -90,6 +91,7 @@ public class Vendeur extends Agent {
 		
 		@Override
 		public void action() {
+			//System.out.println("Vendeur ** TRACE ** "+getAID().getName()+" : ToAnnounceBehaviour");
 			//Test de l'enchere
 			if(_e.getBidCount()>1){
 				//augmentation du prix
@@ -103,12 +105,12 @@ public class Vendeur extends Agent {
 			_e.setBidCount(0);
 			
 			// Fill the CFP message
-	  		ACLMessage msg = new ACLMessage(ACLMessage.CFP);
+	  		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 	  		msg.addReceiver(_marche);
-			//msg.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
 			// We want to receive a reply in 10 seconds
 			msg.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
-			msg.setContent("Nouvelle enchere (enfin la c'est que du texte, ptdr)");
+			msg.setContent("1"+_e.toMessageString());
+			send(msg);
 		}	
 	}
 	
@@ -121,8 +123,13 @@ public class Vendeur extends Agent {
 		
 		@Override
 		public void action() {
+			//System.out.println("Vendeur ** TRACE ** "+getAID().getName()+" : ToWaitForBehaviour");
 			// TODO Auto-generated method stub
-		}	
+		}
+		
+		public int onEnd(){
+			return 0;
+		}
 	}
 	
 	private class ToAttributeBehaviour extends OneShotBehaviour{
@@ -134,6 +141,7 @@ public class Vendeur extends Agent {
 		
 		@Override
 		public void action() {
+			System.out.println("Vendeur ** TRACE ** "+getAID().getName()+" : ToAttributeBehaviour");
 			// TODO Auto-generated method stub
 		}	
 	}
@@ -147,6 +155,7 @@ public class Vendeur extends Agent {
 		
 		@Override
 		public void action() {
+			System.out.println("Vendeur ** TRACE ** "+getAID().getName()+" : ToGiveBehaviour");
 			// TODO Auto-generated method stub
 		}	
 	}
@@ -159,6 +168,7 @@ public class Vendeur extends Agent {
 		
 		@Override
 		public void action() {
+			System.out.println("Vendeur ** TRACE ** "+getAID().getName()+" : ToFinishBehaviour");
 			// TODO Auto-generated method stub
 		}	
 	}

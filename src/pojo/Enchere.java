@@ -9,6 +9,9 @@ public class Enchere implements Comparable<Enchere>{
 	private AID _vendeur;
 	private int _bidCount;
 	
+	public Enchere(){
+	}
+	
 	public Enchere(String name, float init_price, AID vendeur){
 		_name = name;
 		_init_price = init_price;
@@ -58,4 +61,16 @@ public class Enchere implements Comparable<Enchere>{
 		}
 	}
 	
+	public String toMessageString() {
+		return "|"+_name+";"+_init_price+";"+_current_price+";"+_vendeur+"|";
+	}
+	
+	public void fromMessageString(String msg) {
+		String sEnchere[] = msg.split(";");
+		
+		_name = sEnchere[0];
+		_init_price = Float.valueOf(sEnchere[1]);
+		_current_price = Float.valueOf(sEnchere[2]);
+		_vendeur = new AID(sEnchere[3]);
+	}
 }

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import pojo.Enchere;
+import pojo.MessageType;
 
 
 public class Marche extends Agent{
@@ -49,16 +50,11 @@ public class Marche extends Agent{
 	
 	private class MarketBehaviour extends CyclicBehaviour {
 		
-		private static final int TO_ANNOUNCE = 1; 		//le vendeur fait un annonce d'une enchere existante ou non
-		private static final int TO_WITHDRAW = 2;		//le vendeur retire une enchere (attribuee a un preneur)
-		private static final int TO_SUBSCRIBE = 3;		//un preneur s'inscris aupres du marche
-		private static final int TO_UNSUBSCRIBE = 4;	//desinscription d'un preneur (avant depart)
-		
 		@Override
 		public void action() {
 			int type_message = 0;
 			String contMsg; 
-			Enchere e = null;
+			Enchere e = new Enchere();
 			AID preneur;
 			int pos,p;
 			boolean pFound;
@@ -69,19 +65,17 @@ public class Marche extends Agent{
 				contMsg = msg.getContent();
 				type_message = Integer.valueOf(contMsg.substring(0, 1));
 				
-				System.out.println("Marche ** TRACE ** "+getAID().getName()+" : Message recu "+msg.getContent());
-				
 				switch(type_message){
-					case TO_ANNOUNCE:
+					case MessageType.TO_ANNOUNCE:
 						System.out.println("Marche ** TRACE ** "+getAID().getName()+" : annonce recue");
 						
-						String sEnchereAdd[] = contMsg.substring(1).split(";");
-						e = new Enchere(sEnchereAdd[1], Float.valueOf(sEnchereAdd[2]), new AID(sEnchereAdd[0], true));
-						pos = getEncherePosition(e);
+						String sEnchereAdd[] = contMsg.split("|");
+						//e.fromMessageString(sEnchereAdd[1]);
+						//pos = getEncherePosition(e);
 						
-						if(pos==-1){
+						/*if(pos==-1){
 							_list_offres.add(e);
-						}
+						}*/
 
 						ACLMessage nouvelleEnchere = new ACLMessage(ACLMessage.INFORM);
 						
@@ -93,7 +87,7 @@ public class Marche extends Agent{
 						
 						break;
 						
-					case TO_WITHDRAW: 
+					case MessageType.TO_WITHDRAW: 
 						System.out.println("Marche ** TRACE ** "+getAID().getName()+" : annonce retiree");
 						
 						String sEnchereSuppr[] = contMsg.substring(1).split(";");
@@ -115,7 +109,7 @@ public class Marche extends Agent{
 						
 						break;
 						
-					case TO_SUBSCRIBE: 
+					case MessageType.TO_SUBSCRIBE: 
 						System.out.println("Marche ** TRACE ** "+getAID().getName()+" : abonnement");
 						
 						preneur = msg.getSender();
@@ -135,7 +129,7 @@ public class Marche extends Agent{
 						
 						break;
 						
-					case TO_UNSUBSCRIBE:
+					case MessageType.TO_UNSUBSCRIBE:
 						System.out.println("Marche ** TRACE ** "+getAID().getName()+" : desabonnement");
 						
 						preneur = msg.getSender();
@@ -158,6 +152,8 @@ public class Marche extends Agent{
 					default : 
 						System.out.println("Marche ** ERROR ** "+getAID().getName()+" : type de message non connu.");
 				}
+				
+				msg = null;
 			}
 		}
 	}
