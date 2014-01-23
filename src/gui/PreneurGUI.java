@@ -91,6 +91,8 @@ public class PreneurGUI extends JFrame{
 	            //On ne considere que la premiere enchere selectionnee (pas de multiples encheres)
 	            _enchereName.setText(_modele.getEnchere(selection[0]).getName());
 	            _encherePrice.setText(String.valueOf(_modele.getEnchere(selection[0]).getCurrentPrice()));
+	            
+	            _preneur_agent.toBid(_preneur_agent.getEncheres().get(selection[0]));
 			}
 		}
 	}

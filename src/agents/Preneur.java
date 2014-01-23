@@ -9,6 +9,7 @@ import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import pojo.Enchere;
@@ -87,6 +88,14 @@ public class Preneur extends Agent {
 		}
 	}
 	
+	public void toBid(Enchere e){
+		System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : public void toBid(Enchere e)");
+		if(e.getCurrentPrice()<=_money){
+			System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : public void toBid(Enchere e) : ENCHERE VALIDEE");			
+			_current_enchere=e;
+		}
+	}
+	
 	private class AbonnementMarcheBehaviour extends OneShotBehaviour {
 
 		@Override
@@ -139,10 +148,23 @@ public class Preneur extends Agent {
 		
 		@Override
 		public void action() {
-			ACLMessage msg = receive();
 			int type_message=0;
 			String contMsg;
 			Enchere e;
+			
+			//Une nouvelle a-t-elle ete selectionnee ?
+			if(_current_enchere!=null){
+				//Envoi du message au vendeur
+		  		ACLMessage bidMsg = new ACLMessage(ACLMessage.INFORM);
+		  		bidMsg.addReceiver(_current_enchere.getVendeur());
+		  		bidMsg.setContent(String.valueOf(MessageType.TO_BID)+_current_enchere.toMessageString());
+				System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : Envoi du message = "+bidMsg);
+				send(bidMsg);
+				//passage a l'etat suivant
+				_bid=0;
+			}
+			
+			ACLMessage msg = receive();
 			
 			if(msg!=null){
 				contMsg = msg.getContent();
@@ -156,16 +178,7 @@ public class Preneur extends Agent {
 					e.fromMessageString(contMsg);
 					
 					addNewEnchere(e);
-					
-					////////////////////////////////////////////////
-					/// TEST AND DEBUG - TO BE NOTIFIED FROM ITF ///
-					if(_money>e.getCurrentPrice()){	//si on a les fonds pour
-						_bid=0;
-						_current_enchere=e;
-					}
-					/// TEST AND DEBUG - TO BE NOTIFIED FROM ITF ///
-					////////////////////////////////////////////////
-					
+
 					break;
 				default:
 					System.out.println("Preneur ** ERREUR ** "+getAID().getName()+" : "+msg.getContent()+" - Type de message non gere ("+type_message+")");
@@ -210,6 +223,7 @@ public class Preneur extends Agent {
 					if(e.compareTo(_current_enchere)==1){	//l'enchere est celle actuellement traitee
 						//l'enchere a ete refusee... on retourne a l'etat precedent
 						_transition = 1;
+						_current_enchere = null;
 					}
 					
 					//Dans tous les cas, on met a jour le tableau
@@ -224,7 +238,7 @@ public class Preneur extends Agent {
 					break;
 				default:
 					System.out.println("Preneur ** ERREUR ** "+getAID().getName()+" : "+msg.getContent()+" - Type de message non gere ("+type_message+")");
-				}				
+				}		
 			}
 		}
 		
@@ -239,8 +253,23 @@ public class Preneur extends Agent {
 
 		@Override
 		public void action() {
-			// TODO Auto-generated method stub
+			ACLMessage msg = receive();
+			int type_message=0;
+			String contMsg;
+			Enchere e;
 			
+			if(msg!=null){
+				contMsg = msg.getContent();
+				type_message = Integer.valueOf(contMsg.substring(0, 1));
+				
+				switch(type_message){
+				case MessageType.TO_GIVE:
+
+					break;
+				default:
+					System.out.println("Preneur ** ERREUR ** "+getAID().getName()+" : "+msg.getContent()+" - Type de message non gere ("+type_message+")");
+				}				
+			}			
 		}
 		
 	}
