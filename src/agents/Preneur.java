@@ -18,6 +18,7 @@ public class Preneur extends Agent {
 
 	private Float _money;
 	private List<Enchere> _encheres;
+	private Enchere _current_enchere;
 	private AID _marche;
 	private PreneurGUI _preneurGUI;
 	
@@ -53,12 +54,37 @@ public class Preneur extends Agent {
 		_encheres = null;
 		_marche = null;
 		_money = null;
+		_current_enchere = null;
 		
 		System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : Depart de l'acheteur");
 	}
 	
 	public List<Enchere> getEncheres(){
 		return _encheres;
+	}
+	
+	public void addNewEnchere(Enchere e){
+		int ePos = e.getEncherePosition(_encheres);
+		EncherePreneurTable modele = _preneurGUI.getEncherePreneurTable();
+		
+		if(ePos!=-1){	//enchere existante
+			_encheres.remove(ePos);
+			modele.removeEnchere(ePos);
+		}
+		
+		//Mise a jour de l'interface et de la liste
+		_encheres.add(e);
+		modele.addEnchere(e);
+	}
+	
+	public void removeEnchere(Enchere e){
+		int ePos = e.getEncherePosition(_encheres);
+		EncherePreneurTable modele = _preneurGUI.getEncherePreneurTable();
+		
+		if(ePos!=-1){	//enchere existante
+			_encheres.remove(ePos);
+			modele.removeEnchere(ePos);
+		}
 	}
 	
 	private class AbonnementMarcheBehaviour extends OneShotBehaviour {
@@ -92,21 +118,23 @@ public class Preneur extends Agent {
 			this.registerLastState(new ToFinishBehaviour(), STATE_TOFINISH);
 			
 			//Register transitions
-			this.registerTransition(STATE_TOWAITFORANNOUNCE, STATE_TOWAITFORANNOUNCE,0);	//Announce - not interested
-			this.registerTransition(STATE_TOWAITFORANNOUNCE, STATE_TOBID,1);	//Announce - interested
-			this.registerTransition(STATE_TOBID,STATE_TOWAITFORANNOUNCE,0);		//Rejected
-			this.registerTransition(STATE_TOBID,STATE_TOPAY,1);					//Accepted
+			this.registerTransition(STATE_TOWAITFORANNOUNCE, STATE_TOBID,0);	//Announce - not interested
+			this.registerTransition(STATE_TOWAITFORANNOUNCE, STATE_TOWAITFORANNOUNCE,1);	//Announce - interested
+			this.registerTransition(STATE_TOBID,STATE_TOBID,0);					//Nothing happened
+			this.registerTransition(STATE_TOBID,STATE_TOWAITFORANNOUNCE,1);		//Rejected
+			this.registerTransition(STATE_TOBID,STATE_TOPAY,2);					//Accepted
 			this.registerDefaultTransition(STATE_TOPAY,STATE_TOFINISH);			//Everything OK
 		}
 	}
 	
 	private class ToWaitForAnnounceBehaviour extends OneShotBehaviour {
 
-		int bid;	//boolean used as integer for convenience in "onEnd()"
+		int _bid;	//boolean used as integer for convenience in "onEnd()"
 		
 		public ToWaitForAnnounceBehaviour(){
 			System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : ToWaitForAnnounceBehaviour");
-			bid=0;
+			_bid=1;
+			_current_enchere=null;
 		}
 		
 		@Override
@@ -127,12 +155,16 @@ public class Preneur extends Agent {
 					e = new Enchere();
 					e.fromMessageString(contMsg);
 					
-					_encheres.add(e);
-					EncherePreneurTable modele = _preneurGUI.getEncherePreneurTable();
-					modele.addEnchere(e);
-					/*if(_money>e.getCurrentPrice()){
-						bid=1;
-					}*/
+					addNewEnchere(e);
+					
+					////////////////////////////////////////////////
+					/// TEST AND DEBUG - TO BE NOTIFIED FROM ITF ///
+					if(_money>e.getCurrentPrice()){	//si on a les fonds pour
+						_bid=0;
+						_current_enchere=e;
+					}
+					/// TEST AND DEBUG - TO BE NOTIFIED FROM ITF ///
+					////////////////////////////////////////////////
 					
 					break;
 				default:
@@ -143,21 +175,62 @@ public class Preneur extends Agent {
 		
 		@Override
 		public int onEnd(){
-			return bid;
+			return _bid;
 		}
 		
 	}
 	
 	private class ToBidBehaviour extends OneShotBehaviour {
 		
+		private int _transition;
+		
 		public ToBidBehaviour(){
 			System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : ToBidBehaviour");
+			_transition=0;
 		}
 
 		@Override
 		public void action() {
-			// TODO Auto-generated method stub
+			ACLMessage msg = receive();
+			int type_message=0;
+			String contMsg;
+			Enchere e;
 			
+			if(msg!=null){
+				contMsg = msg.getContent();
+				type_message = Integer.valueOf(contMsg.substring(0, 1));
+				
+				switch(type_message){
+				case MessageType.TO_ANNOUNCE:
+					System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : annonce recue");
+					
+					e = new Enchere();
+					e.fromMessageString(contMsg);
+					
+					if(e.compareTo(_current_enchere)==1){	//l'enchere est celle actuellement traitee
+						//l'enchere a ete refusee... on retourne a l'etat precedent
+						_transition = 1;
+					}
+					
+					//Dans tous les cas, on met a jour le tableau
+					addNewEnchere(e);
+
+					break;
+				case MessageType.TO_ATTRIBUTE:
+					System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : enchere validee");
+					
+					//Passage a l'etat suivant (paiement et reception de l'objet)
+					_transition=0;
+					break;
+				default:
+					System.out.println("Preneur ** ERREUR ** "+getAID().getName()+" : "+msg.getContent()+" - Type de message non gere ("+type_message+")");
+				}				
+			}
+		}
+		
+		@Override
+		public int onEnd(){
+			return _transition;
 		}
 		
 	}
