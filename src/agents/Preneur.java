@@ -1,5 +1,6 @@
 package agents;
 
+import gui.EncherePreneurTable;
 import gui.PreneurGUI;
 import jade.core.AID;
 import jade.core.Agent;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import pojo.Enchere;
+import pojo.MessageType;
 
 public class Preneur extends Agent {
 
@@ -26,6 +28,7 @@ public class Preneur extends Agent {
 	  		
 	  		_marche = new AID((String)args[0], AID.ISLOCALNAME);
 	  		//_money = Float.valueOf((String)args[1]);
+	  		_money = 150.f;
 	  		
 	  		_encheres = new ArrayList<Enchere>();
 	  		
@@ -89,28 +92,67 @@ public class Preneur extends Agent {
 			this.registerLastState(new ToFinishBehaviour(), STATE_TOFINISH);
 			
 			//Register transitions
-			this.registerDefaultTransition(STATE_TOWAITFORANNOUNCE, STATE_TOBID);
-			this.registerTransition(STATE_TOBID,STATE_TOWAITFORANNOUNCE,0);
-			this.registerTransition(STATE_TOBID,STATE_TOPAY,1);
-			this.registerDefaultTransition(STATE_TOPAY,STATE_TOFINISH);
+			this.registerTransition(STATE_TOWAITFORANNOUNCE, STATE_TOWAITFORANNOUNCE,0);	//Announce - not interested
+			this.registerTransition(STATE_TOWAITFORANNOUNCE, STATE_TOBID,1);	//Announce - interested
+			this.registerTransition(STATE_TOBID,STATE_TOWAITFORANNOUNCE,0);		//Rejected
+			this.registerTransition(STATE_TOBID,STATE_TOPAY,1);					//Accepted
+			this.registerDefaultTransition(STATE_TOPAY,STATE_TOFINISH);			//Everything OK
 		}
 	}
 	
 	private class ToWaitForAnnounceBehaviour extends OneShotBehaviour {
 
+		int bid;	//boolean used as integer for convenience in "onEnd()"
+		
+		public ToWaitForAnnounceBehaviour(){
+			System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : ToWaitForAnnounceBehaviour");
+			bid=0;
+		}
+		
 		@Override
 		public void action() {
 			ACLMessage msg = receive();
+			int type_message=0;
+			String contMsg;
+			Enchere e;
 			
 			if(msg!=null){
-				System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : "+msg.getContent());
+				contMsg = msg.getContent();
+				type_message = Integer.valueOf(contMsg.substring(0, 1));
 				
+				switch(type_message){
+				case MessageType.TO_ANNOUNCE:
+					System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : annonce recue");
+					
+					e = new Enchere();
+					e.fromMessageString(contMsg);
+					
+					_encheres.add(e);
+					EncherePreneurTable modele = _preneurGUI.getEncherePreneurTable();
+					modele.addEnchere(e);
+					/*if(_money>e.getCurrentPrice()){
+						bid=1;
+					}*/
+					
+					break;
+				default:
+					System.out.println("Preneur ** ERREUR ** "+getAID().getName()+" : "+msg.getContent()+" - Type de message non gere ("+type_message+")");
+				}				
 			}
+		}
+		
+		@Override
+		public int onEnd(){
+			return bid;
 		}
 		
 	}
 	
 	private class ToBidBehaviour extends OneShotBehaviour {
+		
+		public ToBidBehaviour(){
+			System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : ToBidBehaviour");
+		}
 
 		@Override
 		public void action() {

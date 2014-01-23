@@ -34,11 +34,12 @@ public class Marche extends Agent{
 	}
 	
 	public int getEncherePosition(Enchere e){
-		int i = -1;
+		System.out.println("Marche ** DEBUG ** "+getAID().getName()+" : public int getEncherePosition(Enchere e)");
+		int i = 0;
 		boolean found = false;
 		while(i<_list_offres.size() && !found ){
-			i++;
 			found = _list_offres.get(i).compareTo(e) == 0;
+			i++;
 		}
 		
 		if(found){
@@ -52,12 +53,12 @@ public class Marche extends Agent{
 		
 		@Override
 		public void action() {
-			int type_message = 0;
+			int type_message = 0,p;
 			String contMsg; 
 			Enchere e = new Enchere();
 			AID preneur;
-			int pos,p;
 			boolean pFound;
+			ACLMessage nouvelleEnchere;
 			
 			ACLMessage msg = receive();
 			
@@ -67,17 +68,16 @@ public class Marche extends Agent{
 				
 				switch(type_message){
 					case MessageType.TO_ANNOUNCE:
-						System.out.println("Marche ** TRACE ** "+getAID().getName()+" : annonce recue");
-						
-						String sEnchereAdd[] = contMsg.split("|");
-						//e.fromMessageString(sEnchereAdd[1]);
-						//pos = getEncherePosition(e);
-						
-						/*if(pos==-1){
-							_list_offres.add(e);
-						}*/
+						System.out.println("Marche ** TRACE ** "+getAID().getName()+" : annonce recue = "+contMsg);
 
-						ACLMessage nouvelleEnchere = new ACLMessage(ACLMessage.INFORM);
+						e.fromMessageString(contMsg);
+						
+						if(getEncherePosition(e)==-1){
+							System.out.println("Marche ** TRACE ** "+getAID().getName()+" : annonce sur le point d'etre ajoutee");
+							_list_offres.add(e);
+						}
+
+						nouvelleEnchere = new ACLMessage(ACLMessage.INFORM);
 						
 						for(int i=0; i<_list_preneurs_abonnes.size(); i++){
 							nouvelleEnchere.addReceiver(_list_preneurs_abonnes.get(i));
@@ -92,9 +92,8 @@ public class Marche extends Agent{
 						
 						String sEnchereSuppr[] = contMsg.substring(1).split(";");
 						e = new Enchere(sEnchereSuppr[1], Float.valueOf(sEnchereSuppr[2]), new AID(sEnchereSuppr[0], true));
-						pos = getEncherePosition(e);
-						
-						if(pos!=-1){
+
+						if(getEncherePosition(e)!=-1){
 							ACLMessage suppressionEnchere = new ACLMessage(ACLMessage.INFORM);
 							
 							for(int i=0; i<_list_preneurs_abonnes.size(); i++){
@@ -103,7 +102,7 @@ public class Marche extends Agent{
 							suppressionEnchere.setContent(contMsg);
 					  		send(suppressionEnchere);
 					  		
-					  		_list_offres.remove(pos);
+					  		_list_offres.remove(getEncherePosition(e));
 						}
 
 						
@@ -125,6 +124,15 @@ public class Marche extends Agent{
 						if(!pFound){
 							_list_preneurs_abonnes.add(preneur);
 							System.out.println("Marche ** TRACE ** "+getAID().getName()+" : le PRENEUR "+preneur+" vient de s'abonner.");
+
+							nouvelleEnchere = new ACLMessage(ACLMessage.INFORM);
+							nouvelleEnchere.addReceiver(preneur);
+							String offre;
+							for(int i=0;i<_list_offres.size();i++){
+								offre = _list_offres.get(i).toMessageString();
+								nouvelleEnchere.setContent("1"+offre);
+						  		send(nouvelleEnchere);
+							}
 						}
 						
 						break;

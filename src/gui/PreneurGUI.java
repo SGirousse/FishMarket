@@ -73,6 +73,10 @@ public class PreneurGUI extends JFrame{
 		super.setVisible(true);
 	}
 	
+	public EncherePreneurTable getEncherePreneurTable(){
+		return _modele;
+	}
+	
 	private class BidAction extends AbstractAction {
 		
 		private BidAction() {
@@ -89,7 +93,5 @@ public class PreneurGUI extends JFrame{
 	            _encherePrice.setText(String.valueOf(_modele.getEnchere(selection[0]).getCurrentPrice()));
 			}
 		}
-		
 	}
-	
 }
