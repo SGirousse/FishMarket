@@ -134,6 +134,8 @@ public class Marche extends Agent{
 								_list_preneurs_abonnes.remove(p);
 								pFound=true;
 								System.out.println("Marche ** TRACE ** "+getAID().getName()+" : le PRENEUR "+preneur+" vient d'etre desabonne.");
+							}else{
+								p++;
 							}
 						}
 						

@@ -188,7 +188,7 @@ public class Preneur extends Agent {
 	
 						break;
 					case MessageType.TO_WITHDRAW:
-						System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : enchere annulee (donnee a un autre acheteur :'( )");
+						System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : enchere annulee");
 						
 						e = new Enchere();
 						e.fromMessageString(contMsg);
@@ -250,14 +250,18 @@ public class Preneur extends Agent {
 					addNewEnchere(e);
 
 					break;
+					
 				case MessageType.TO_WITHDRAW:
+					//Le WITHDRAW ne peut pas etre recu si l'on est le preneur ayant gagne l'enchere car ce message n'est envoye
+					//qu'APRES que l'ATTRIBUTE soit recu (et valide via un AR)
 					System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : enchere annulee (donnee a un autre acheteur :'( )");
 					
 					e = new Enchere();
 					e.fromMessageString(contMsg);
 					
-					if(e.compareTo(_current_enchere)==0){	//l'enchere est celle actuellement traitee
-						//l'enchere a ete refusee... on retourne a l'etat precedent
+					//l'enchere est celle actuellement traitee ?
+					if(e.compareTo(_current_enchere)==0){	
+						//l'enchere a ete refusee... on retourne a l'etat precedent en nettoyant tout (enchere, interface, ...)
 						_transition = 1;
 						_current_enchere = null;
 						_preneurGUI.cleanCurrentEnchere();
@@ -266,7 +270,14 @@ public class Preneur extends Agent {
 					
 					break;
 				case MessageType.TO_ATTRIBUTE:
+					//Afin d'eviter les problemes du WITHDRAW recu meme si l'on est le preneur ayant remporte l'enchere, on renvoi
+					//un accuse de reception au vendeur et puis l'on passe a l'etat suivant.
 					System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : enchere validee");
+					
+					//on accuse reception de l'attribution
+					ACLMessage reply = msg.createReply();
+					reply.setContent("9;ok");
+					send(reply);
 					
 					//Passage a l'etat suivant (paiement et reception de l'objet)
 					_transition=2;
@@ -329,6 +340,19 @@ public class Preneur extends Agent {
 				type_message = Integer.valueOf(contMsg.substring(0, 1));
 				
 				switch(type_message){
+				case MessageType.TO_WITHDRAW:
+					System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : enchere annulee - la mienne ?");
+					
+					e = new Enchere();
+					e.fromMessageString(contMsg);
+					
+					//l'enchere est celle actuellement traitee ?
+					if(e.compareTo(_current_enchere)!=0){	
+						//ce n'est pas mon enchere, il faut donc mettre a jour les informations
+						removeEnchere(e);
+					}
+					
+					break;
 				case MessageType.TO_GIVE:
 					e = new Enchere();
 					e.fromMessageString(contMsg);
@@ -356,12 +380,12 @@ public class Preneur extends Agent {
 				}				
 			}	
 			
-			try {
+			/*try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
-			}
+			}*/
 		}
 		
 		public int onEnd(){
