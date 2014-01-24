@@ -12,7 +12,7 @@ import pojo.EnchereVendeur;
  */
 public class EnchereVendeurTable extends AbstractTableModel {
     private final List<EnchereVendeur> _encheres;
-	private final String[] entetes = {"Article", "Prix courant", "Prix initial", "Nombre de preneurs"};
+	private final String[] entetes = {"Article", "Prix initial", "Prix courant", "Bids"};
  
     public EnchereVendeurTable(List<EnchereVendeur> encheres) {
         super();

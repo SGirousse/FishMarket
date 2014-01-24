@@ -33,22 +33,6 @@ public class Marche extends Agent{
 		System.out.println("Marche ** TRACE ** "+getAID().getName()+" : Cloture du marche");
 	}
 	
-	public int getEncherePosition(Enchere e){
-		System.out.println("Marche ** DEBUG ** "+getAID().getName()+" : public int getEncherePosition(Enchere e)");
-		int i = 0;
-		boolean found = false;
-		while(i<_list_offres.size() && !found ){
-			found = _list_offres.get(i).compareTo(e) == 0;
-			i++;
-		}
-		
-		if(found){
-			return i;
-		}else{
-			return -1;
-		}	
-	}
-	
 	private class MarketBehaviour extends CyclicBehaviour {
 		
 		@Override
@@ -72,7 +56,7 @@ public class Marche extends Agent{
 
 						e.fromMessageString(contMsg);
 						
-						if(getEncherePosition(e)==-1){
+						if(e.getEncherePosition(_list_offres)==-1){
 							System.out.println("Marche ** TRACE ** "+getAID().getName()+" : annonce sur le point d'etre ajoutee");
 							_list_offres.add(e);
 						}
@@ -90,10 +74,10 @@ public class Marche extends Agent{
 					case MessageType.TO_WITHDRAW: 
 						System.out.println("Marche ** TRACE ** "+getAID().getName()+" : annonce retiree");
 						
-						String sEnchereSuppr[] = contMsg.substring(1).split(";");
-						e = new Enchere(sEnchereSuppr[1], Float.valueOf(sEnchereSuppr[2]), new AID(sEnchereSuppr[0], true));
+						e.fromMessageString(contMsg);
+						contMsg = String.valueOf(MessageType.TO_WITHDRAW)+e.toMessageString();
 
-						if(getEncherePosition(e)!=-1){
+						if(e.getEncherePosition(_list_offres)!=-1){
 							ACLMessage suppressionEnchere = new ACLMessage(ACLMessage.INFORM);
 							
 							for(int i=0; i<_list_preneurs_abonnes.size(); i++){
@@ -102,7 +86,7 @@ public class Marche extends Agent{
 							suppressionEnchere.setContent(contMsg);
 					  		send(suppressionEnchere);
 					  		
-					  		_list_offres.remove(getEncherePosition(e));
+					  		_list_offres.remove(e.getEncherePosition(_list_offres));
 						}
 
 						
@@ -118,6 +102,8 @@ public class Marche extends Agent{
 							if(_list_preneurs_abonnes.get(p).compareTo(preneur)==0){
 								pFound=true;
 								System.out.println("Marche ** ERROR ** "+getAID().getName()+" : le PRENEUR "+preneur+" est deja abonne !");
+							}else{
+								p++;
 							}
 						}
 						

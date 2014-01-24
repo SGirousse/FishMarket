@@ -1,28 +1,45 @@
 package pojo;
 
-import jade.core.AID;
-
 import java.util.List;
 
 public class EnchereVendeur extends Enchere {
 
-	private List<AID> _list_preneurs;
+	private List<String> _list_preneurs;
 		
-	public EnchereVendeur(List<AID> list_preneurs, String name, float current_price, AID vendeur){
+	public EnchereVendeur(List<String> list_preneurs, String name, float current_price, String vendeur){
 		super(name, current_price, vendeur);
 		
 		_list_preneurs = list_preneurs;
 	}
 	
-	public List<AID> getListPreneurs(){
+	public List<String> getListPreneurs(){
 		return _list_preneurs;
 	}
 	
-	public void setListPreneurs(List<AID> list_preneurs){
+	public void setListPreneurs(List<String> list_preneurs){
 		_list_preneurs=list_preneurs;
 	}
 	
-	public void addPreneur(AID preneur){
+	public void addPreneur(String preneur){
 		_list_preneurs.add(preneur);
+	}
+	
+	public int getEnchereVendeurPosition(List<EnchereVendeur> list_e){
+		int i = 0;
+		boolean found = false;
+		
+		while(i<list_e.size() && !found ){
+			if(list_e.get(i).compareTo(this) == 0){
+				found=true;
+			}else{
+				i++;
+			}
+		}
+		
+		if(found){
+			return i;
+		}else{
+			return -1;
+		}	
 	}
 }

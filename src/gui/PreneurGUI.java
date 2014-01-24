@@ -27,7 +27,8 @@ public class PreneurGUI extends JFrame{
 	private Preneur _preneur_agent;
 	private JTable _tableau;
 	private EncherePreneurTable _modele;
-	private JLabel _enchereName, _encherePrice;
+	private JLabel _enchereName, _encherePrice, _money;
+	private JButton _tobid;
 	
 	public PreneurGUI(Preneur preneur_agent){
 		super(preneur_agent.getLocalName());
@@ -36,9 +37,12 @@ public class PreneurGUI extends JFrame{
 		
 		_enchereName = new JLabel("");
 		_encherePrice = new JLabel("");
+		_money = new JLabel(String.valueOf(_preneur_agent.getMoney()));
 		
 		JPanel p = new JPanel();
-		p.setLayout(new GridLayout(2,2));
+		p.setLayout(new GridLayout(3,2));
+		p.add(new JLabel("Porte-monnaie :"));
+		p.add(_money);
 		p.add(new JLabel("Enchere en cours :"));
 		p.add(_enchereName);
 		p.add(new JLabel("Prix de l'enchère :"));
@@ -50,7 +54,8 @@ public class PreneurGUI extends JFrame{
 		getContentPane().add(new JScrollPane(_tableau), BorderLayout.CENTER);
 		
         p = new JPanel();
-        p.add(new JButton(new BidAction()));
+        _tobid = new JButton(new BidAction());
+        p.add(_tobid);
         getContentPane().add(p, BorderLayout.SOUTH);
 		
 		// Make the agent terminate when the user closes 
@@ -91,9 +96,17 @@ public class PreneurGUI extends JFrame{
 	            //On ne considere que la premiere enchere selectionnee (pas de multiples encheres)
 	            _enchereName.setText(_modele.getEnchere(selection[0]).getName());
 	            _encherePrice.setText(String.valueOf(_modele.getEnchere(selection[0]).getCurrentPrice()));
+	            _tobid.setEnabled(false);
 	            
 	            _preneur_agent.toBid(_preneur_agent.getEncheres().get(selection[0]));
 			}
 		}
+	}
+	
+	public void cleanCurrentEnchere(){
+		_enchereName.setText("");
+		_encherePrice.setText("");
+		_tobid.setEnabled(true);
+		_money.setText(String.valueOf(_preneur_agent.getMoney()));
 	}
 }

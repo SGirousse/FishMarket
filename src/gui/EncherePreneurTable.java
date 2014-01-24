@@ -16,7 +16,7 @@ import agents.Preneur;
 public class EncherePreneurTable extends AbstractTableModel {
 
 	private final List<Enchere> _encheres;
-	private final String[] entetes = {"Article", "Prix courant", "Prix initial", "Vendeur"};
+	private final String[] entetes = {"Article", "Prix initial", "Prix courant", "Vendeur"};
 	
 	public EncherePreneurTable(List<Enchere> encheres){
 		super();

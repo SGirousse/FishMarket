@@ -8,6 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -55,7 +56,7 @@ public class VendeurGUI extends JFrame {
 					_vendeur_agent.newOffer(title, Float.valueOf(price));
 					_titlefield.setText("");
 					_pricefield.setText("");
-					_modele.addEnchere(new EnchereVendeur(null, title, Float.valueOf(price), _vendeur_agent.getAID()));
+					_modele.addEnchere(new EnchereVendeur(new ArrayList<String>(), title, Float.valueOf(price), _vendeur_agent.getAID().getName()));
 				}
 				catch (Exception e) {
 					JOptionPane.showMessageDialog(VendeurGUI.this, "Invalid values. "+e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE); 
@@ -88,5 +89,9 @@ public class VendeurGUI extends JFrame {
 		int centerY = (int)screenSize.getHeight() / 2;
 		setLocation(centerX - getWidth() / 2, centerY - getHeight() / 2);
 		super.setVisible(true);
+	}
+	
+	public EnchereVendeurTable getEnchereVendeurTable(){
+		return _modele;
 	}
 }
