@@ -311,6 +311,7 @@ public class Preneur extends Agent {
 			
 			_transition=0;
 			
+			
 			// --- Etape 1 : On envoi l'objet de l'enchere au preneur
 			if(!_paiement_envoye){	
 				AID receiver = new AID(_current_enchere.getVendeur(), AID.ISLOCALNAME);
@@ -327,6 +328,7 @@ public class Preneur extends Agent {
 				_money -= _current_enchere.getCurrentPrice();
 				_paiement_envoye=true;
 			}
+			
 			
 			int type_message=0;
 			String contMsg;
@@ -354,15 +356,16 @@ public class Preneur extends Agent {
 					
 					break;
 				case MessageType.TO_GIVE:
+			
 					e = new Enchere();
 					e.fromMessageString(contMsg);
 					
 					if(e.compareTo(_current_enchere)==0){
+						
 						//On supprime l'offre du tableau
 						EncherePreneurTable modele = _preneurGUI.getEncherePreneurTable();
 						int ePos = _current_enchere.getEncherePosition(_encheres);
 						modele.removeEnchere(ePos);
-						//_encheres.remove(ePos);
 						//plus d'enchere courante
 						_current_enchere=null;
 						_preneurGUI.cleanCurrentEnchere();
@@ -378,14 +381,7 @@ public class Preneur extends Agent {
 				default:
 					System.out.println("Preneur ** ERREUR ** "+getAID().getName()+" : "+msg.getContent()+" - Type de message non gere ("+type_message+")");
 				}				
-			}	
-			
-			/*try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}*/
+			}
 		}
 		
 		public int onEnd(){
