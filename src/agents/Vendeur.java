@@ -33,7 +33,6 @@ public class Vendeur extends Agent {
 	  		_time_wait_for_bid = 10;
 	  		
 	  		_ev_list = new ArrayList<EnchereVendeur>();
-	  		_ev_list.add(new EnchereVendeur(new ArrayList<String>(), "GoldenFish", 42.f, getAID().getLocalName()));
 	  		
 	  		_vendeurGUI = new VendeurGUI(this);
 	  		_vendeurGUI.showGui();

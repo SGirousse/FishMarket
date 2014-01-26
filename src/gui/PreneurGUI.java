@@ -83,6 +83,13 @@ public class PreneurGUI extends JFrame{
 		return _modele;
 	}
 	
+	public void toBid(int i){
+        //On ne considere que la premiere enchere selectionnee (pas de multiples encheres)
+        _enchereName.setText(_modele.getEnchere(i).getName());
+        _encherePrice.setText(String.valueOf(_modele.getEnchere(i).getCurrentPrice()));
+        _tobid.setEnabled(false);
+	}
+	
 	private class BidAction extends AbstractAction {
 		
 		private BidAction() {
@@ -92,6 +99,7 @@ public class PreneurGUI extends JFrame{
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			if(_tableau.getRowCount()>0 && _tableau.getSelectedRows().length>0){
+				
 	            int[] selection = _tableau.getSelectedRows();
 	            
 	            //On ne considere que la premiere enchere selectionnee (pas de multiples encheres)
@@ -99,8 +107,6 @@ public class PreneurGUI extends JFrame{
 	            _encherePrice.setText(String.valueOf(_modele.getEnchere(selection[0]).getCurrentPrice()));
 	            _tobid.setEnabled(false);
 	            
-	            System.out.println("PRENEUR GUI = "+selection[0]);
-	            System.out.println("PRENEUR GUI = "+_preneur_agent.getEncheres().size());
 	            _preneur_agent.toBid(_preneur_agent.getEncheres().get(selection[0]));
 			}
 		}
@@ -118,4 +124,5 @@ public class PreneurGUI extends JFrame{
 	public void numberOfOffersChanged(){
 		_tobid.setEnabled(_modele.getRowCount()>0);
 	}
+	
 }

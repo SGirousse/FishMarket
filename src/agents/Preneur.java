@@ -11,6 +11,8 @@ import jade.lang.acl.ACLMessage;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JButton;
+
 import pojo.Enchere;
 import pojo.MessageType;
 
@@ -21,14 +23,17 @@ public class Preneur extends Agent {
 	private Enchere _current_enchere;
 	private AID _marche;
 	private PreneurGUI _preneurGUI;
+	private boolean _system_auto;
 	
 	protected void setup(){
 	  	Object[] args = getArguments();
-	  	if (args != null && args.length > 0) {
+	  	if (args != null && args.length > 2) {
 	  		System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : Arrivee de l'acheteur");
 	  		
 	  		_marche = new AID((String)args[0], AID.ISLOCALNAME);
 	  		_money = Float.valueOf((String)args[1]);
+	  		//system automatique ?
+	  		_system_auto = Integer.valueOf((String)args[2])==1;
 	  		
 	  		_encheres = new ArrayList<Enchere>();
 	  		
@@ -55,6 +60,7 @@ public class Preneur extends Agent {
 		_marche = null;
 		_money = null;
 		_current_enchere = null;
+		_preneurGUI = null;
 		
 		System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : Depart de l'acheteur");
 	}
@@ -100,6 +106,11 @@ public class Preneur extends Agent {
 		return _money;
 	}
 	
+	/**
+	 * On s'abonne au marche pour eviter toute attente active des offres.
+	 *
+	 * @see Marche
+	 */
 	private class AbonnementMarcheBehaviour extends OneShotBehaviour {
 
 		@Override
@@ -139,6 +150,11 @@ public class Preneur extends Agent {
 		}
 	}
 	
+	/**
+	 * Cette classe est la representation de l'attente d'une annonce interessante pour l'algorithme automatique 
+	 * ou l'utilisateur dans le cas d'une gestion manuelle.
+	 *
+	 */
 	private class ToWaitForAnnounceBehaviour extends OneShotBehaviour {
 
 		int _transition;	//Used as integer for convenience in "onEnd()"
@@ -154,19 +170,51 @@ public class Preneur extends Agent {
 			String contMsg;
 			Enchere e;
 			_transition=1;
-			//Une nouvelle a-t-elle ete selectionnee ?
-			if(_current_enchere!=null){
-				//Envoi du message au vendeur
-		  		ACLMessage bidMsg = new ACLMessage(ACLMessage.INFORM);
-		  		AID aid_tmp = new AID(_current_enchere.getVendeur(), AID.ISLOCALNAME);
-		  		bidMsg.addReceiver(aid_tmp);
-		  		contMsg = String.valueOf(MessageType.TO_BID)+_current_enchere.toMessageString()+getAID().getLocalName();
-		  		bidMsg.setContent(contMsg);
-				send(bidMsg);
-				
-				//passage a l'etat suivant
-				_transition=0;
+			
+			if(_system_auto){
+				//Systeme automatique - on prend la premiere a dispo
+				if(_encheres.size()>0){
+					int i=0;
+					boolean ok=false;
+					while(!ok && i<_encheres.size()){
+						if(_encheres.get(i).getCurrentPrice()<=_money){
+							_preneurGUI.toBid(i);
+							_current_enchere=_encheres.get(i);
+							//Envoi du message au vendeur
+					  		ACLMessage bidMsg = new ACLMessage(ACLMessage.INFORM);
+					  		AID aid_tmp = new AID(_current_enchere.getVendeur(), AID.ISLOCALNAME);
+					  		bidMsg.addReceiver(aid_tmp);
+					  		contMsg = String.valueOf(MessageType.TO_BID)+_current_enchere.toMessageString()+getAID().getLocalName();
+					  		bidMsg.setContent(contMsg);
+							send(bidMsg);
+							
+							//passage a l'etat suivant
+							_transition=0;
+							
+							ok=true;
+						}else{
+							i++;
+						}
+					}
+				}
 			}else{
+				//Une nouvelle a-t-elle ete selectionnee ?
+				if(_current_enchere!=null){
+					//Envoi du message au vendeur
+			  		ACLMessage bidMsg = new ACLMessage(ACLMessage.INFORM);
+			  		AID aid_tmp = new AID(_current_enchere.getVendeur(), AID.ISLOCALNAME);
+			  		bidMsg.addReceiver(aid_tmp);
+			  		contMsg = String.valueOf(MessageType.TO_BID)+_current_enchere.toMessageString()+getAID().getLocalName();
+			  		bidMsg.setContent(contMsg);
+					send(bidMsg);
+					
+					//passage a l'etat suivant
+					_transition=0;
+				}
+			}
+			
+			//Si aucun "bid" sur une enchere n'a ete fait, on gere les messages recus.
+			if(_current_enchere==null){
 				ACLMessage msg = receive();
 				
 				if(msg!=null){
@@ -207,6 +255,11 @@ public class Preneur extends Agent {
 		}
 	}
 	
+	/**
+	 * 
+	 * Gestion du comportement apres avoir participe a une enchere.
+	 *
+	 */
 	private class ToBidBehaviour extends OneShotBehaviour {
 		
 		private int _transition;
@@ -327,14 +380,14 @@ public class Preneur extends Agent {
 			Enchere e;
 			ACLMessage msg = receive();
 			
-			// --- Etape 2 : On attend le paiement
+			// --- Etape 2 : On attend la reception de l'enchere
 			
 			if(msg!=null){
 				contMsg = msg.getContent();
 				type_message = Integer.valueOf(contMsg.substring(0, 1));
 				
 				switch(type_message){
-				case MessageType.TO_ANNOUNCE:
+				case MessageType.TO_ANNOUNCE:	//Gestion des nouvelles encheres qui arrivent
 					System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : annonce recue");
 					
 					e = new Enchere();
@@ -345,7 +398,7 @@ public class Preneur extends Agent {
 					}					
 					
 					break;
-				case MessageType.TO_WITHDRAW:
+				case MessageType.TO_WITHDRAW:	//Gestion des encheres qui ne sont plus en cours
 					System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : enchere annulee - (la mienne ?)");
 					
 					e = new Enchere();
@@ -358,7 +411,7 @@ public class Preneur extends Agent {
 					}
 					
 					break;
-				case MessageType.TO_GIVE:
+				case MessageType.TO_GIVE:	//Reception de l'enchere
 			
 					e = new Enchere();
 					e.fromMessageString(contMsg);
