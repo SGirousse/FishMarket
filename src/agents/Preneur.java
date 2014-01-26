@@ -115,9 +115,7 @@ public class Preneur extends Agent {
 	}
 	
 	private class PreneurBehaviour extends FSMBehaviour {
-		
-		private Enchere _e;
-		
+				
 		private static final String STATE_TOWAITFORANNOUNCE = "STATE_TOWAITFORANNOUNCE";
 		private static final String STATE_TOBID = "STATE_TOBID";
 		private static final String STATE_TOPAY = "STATE_TOPAY";
@@ -144,11 +142,10 @@ public class Preneur extends Agent {
 	
 	private class ToWaitForAnnounceBehaviour extends OneShotBehaviour {
 
-		int _bid;	//boolean used as integer for convenience in "onEnd()"
+		int _transition;	//Used as integer for convenience in "onEnd()"
 		
 		public ToWaitForAnnounceBehaviour(){
 			System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : ToWaitForAnnounceBehaviour");
-			_bid=1;
 			_current_enchere=null;
 		}
 		
@@ -157,7 +154,7 @@ public class Preneur extends Agent {
 			int type_message=0;
 			String contMsg;
 			Enchere e;
-			_bid=1;
+			_transition=1;
 			//Une nouvelle a-t-elle ete selectionnee ?
 			if(_current_enchere!=null){
 				//Envoi du message au vendeur
@@ -169,7 +166,7 @@ public class Preneur extends Agent {
 				send(bidMsg);
 				
 				//passage a l'etat suivant
-				_bid=0;
+				_transition=0;
 			}else{
 				ACLMessage msg = receive();
 				
@@ -178,22 +175,24 @@ public class Preneur extends Agent {
 					type_message = Integer.valueOf(contMsg.substring(0, 1));
 					
 					switch(type_message){
-					case MessageType.TO_ANNOUNCE:
+					case MessageType.TO_ANNOUNCE:	//Une enchere a ete envoyee, on l'ajoute au tableau
 						System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : annonce recue");
 						
 						e = new Enchere();
 						e.fromMessageString(contMsg);
 						
 						addNewEnchere(e);
+						_preneurGUI.numberOfOffersChanged();
 	
 						break;
-					case MessageType.TO_WITHDRAW:
+					case MessageType.TO_WITHDRAW:	//Une enchere a ete attribuee a un autre preneur, on la retire du tableau
 						System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : enchere annulee");
 						
 						e = new Enchere();
 						e.fromMessageString(contMsg);
 						
 						removeEnchere(e);
+						_preneurGUI.numberOfOffersChanged();
 												
 						break;
 					default:
@@ -205,7 +204,7 @@ public class Preneur extends Agent {
 		
 		@Override
 		public int onEnd(){
-			return _bid;
+			return _transition;
 		}
 	}
 	
@@ -214,7 +213,6 @@ public class Preneur extends Agent {
 		private int _transition;
 		
 		public ToBidBehaviour(){
-			System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : ToBidBehaviour");
 			_transition=0;
 		}
 
@@ -252,8 +250,6 @@ public class Preneur extends Agent {
 					break;
 					
 				case MessageType.TO_WITHDRAW:
-					//Le WITHDRAW ne peut pas etre recu si l'on est le preneur ayant gagne l'enchere car ce message n'est envoye
-					//qu'APRES que l'ATTRIBUTE soit recu (et valide via un AR)
 					System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : enchere annulee (donnee a un autre acheteur :'( )");
 					
 					e = new Enchere();
@@ -264,20 +260,14 @@ public class Preneur extends Agent {
 						//l'enchere a ete refusee... on retourne a l'etat precedent en nettoyant tout (enchere, interface, ...)
 						_transition = 1;
 						_current_enchere = null;
-						_preneurGUI.cleanCurrentEnchere();
-						removeEnchere(e);
 					}
+
+					removeEnchere(e);
+					_preneurGUI.cleanCurrentEnchere();
 					
 					break;
 				case MessageType.TO_ATTRIBUTE:
-					//Afin d'eviter les problemes du WITHDRAW recu meme si l'on est le preneur ayant remporte l'enchere, on renvoi
-					//un accuse de reception au vendeur et puis l'on passe a l'etat suivant.
 					System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : enchere validee");
-					
-					//on accuse reception de l'attribution
-					ACLMessage reply = msg.createReply();
-					reply.setContent("9;ok");
-					send(reply);
 					
 					//Passage a l'etat suivant (paiement et reception de l'objet)
 					_transition=2;
@@ -314,6 +304,9 @@ public class Preneur extends Agent {
 			
 			// --- Etape 1 : On envoi l'objet de l'enchere au preneur
 			if(!_paiement_envoye){	
+
+				System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : Envoi du paiement");
+				
 				AID receiver = new AID(_current_enchere.getVendeur(), AID.ISLOCALNAME);
 				String content;
 
@@ -342,8 +335,19 @@ public class Preneur extends Agent {
 				type_message = Integer.valueOf(contMsg.substring(0, 1));
 				
 				switch(type_message){
+				case MessageType.TO_ANNOUNCE:
+					System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : annonce recue");
+					
+					e = new Enchere();
+					e.fromMessageString(contMsg);
+					
+					if(e.compareTo(_current_enchere)!=0){	//l'enchere n'est pas celle actuellement traitee
+						addNewEnchere(e);
+					}					
+					
+					break;
 				case MessageType.TO_WITHDRAW:
-					System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : enchere annulee - la mienne ?");
+					System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : enchere annulee - (la mienne ?)");
 					
 					e = new Enchere();
 					e.fromMessageString(contMsg);
@@ -366,10 +370,15 @@ public class Preneur extends Agent {
 						EncherePreneurTable modele = _preneurGUI.getEncherePreneurTable();
 						int ePos = _current_enchere.getEncherePosition(_encheres);
 						modele.removeEnchere(ePos);
-						//plus d'enchere courante
+						
+						//Plus d'enchere courante
 						_current_enchere=null;
 						_preneurGUI.cleanCurrentEnchere();
-						if(_money<20){
+						
+						_paiement_envoye=false;
+						
+						//Verification du comportement selon le porte-monnaie
+						if(_money<=0){
 							//Passage a l'état final
 							_transition=1;
 						}else{
@@ -380,7 +389,7 @@ public class Preneur extends Agent {
 					break;
 				default:
 					System.out.println("Preneur ** ERREUR ** "+getAID().getName()+" : "+msg.getContent()+" - Type de message non gere ("+type_message+")");
-				}				
+				}
 			}
 		}
 		

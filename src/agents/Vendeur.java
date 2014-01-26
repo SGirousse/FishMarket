@@ -5,18 +5,13 @@ import gui.VendeurGUI;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.FSMBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
-import jade.core.behaviours.ParallelBehaviour;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import pojo.Enchere;
 import pojo.EnchereVendeur;
 import pojo.MessageType;
 import pojo.Step;
@@ -27,7 +22,6 @@ public class Vendeur extends Agent {
 	private AID _marche;
 	private VendeurGUI _vendeurGUI;
 	private int _time_wait_for_bid;	
-	private ParallelBehaviour _vendeur_parallel;
 	
 	protected void setup(){
 	  	Object[] args = getArguments();
@@ -43,10 +37,7 @@ public class Vendeur extends Agent {
 	  		
 	  		_vendeurGUI = new VendeurGUI(this);
 	  		_vendeurGUI.showGui();
-	  		
-	  		//_vendeur_parallel = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL);	//WHEN_ALL : Le vendeur a un comportement qui se termine quand tous ses sous-comportement se terminent
-	  		//_vendeur_parallel.addSubBehaviour(new VendeurBehaviour(_encheres.get(0)));
-	  		//addBehaviour(_vendeur_parallel);
+
 	  		addBehaviour(new VendeurBehaviour());
 				
 	  	}else{
@@ -62,20 +53,6 @@ public class Vendeur extends Agent {
 	public void newOffer(String title, float price){
 		EnchereVendeur ev = new EnchereVendeur(new ArrayList<String>(), title, price, getAID().getLocalName());
 		_ev_list.add(ev);
-		
-
-		//_vendeur_parallel = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL);
-
-		//_vendeur_parallel.addSubBehaviour(new VendeurBehaviour(ev));	
-		/*
-		System.out.println("NOUVELLE ENCHERE");
-		if(_vendeur_parallel.done()){
-			System.out.println("ISDONE");
-		}else{
-			System.out.println("VENDEUR RUNNABLE OUI");	
-		}	
-		_vendeur_parallel.restart();
-		*/
 	}
 	
 
@@ -129,14 +106,15 @@ public class Vendeur extends Agent {
 					//On previent le marche
 			  		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			  		msg.addReceiver(_marche);
-					msg.setContent(String.valueOf(MessageType.TO_ANNOUNCE)+_ev_list.get(i).toMessageString());
+			  		contMsg = String.valueOf(MessageType.TO_ANNOUNCE)+_ev_list.get(i).toMessageString();
+					msg.setContent(contMsg);
 					send(msg);
 					
-					//Le message passe à l'étape suivante 
+					//Le message passe à l'étape suivante : init des parametres
 					_ev_list.get(i).setStep(Step.wait_for_bid);
-					//Reinit. nombre de bids et timer
 					_ev_list.get(i).setBidCount(0);
 					_ev_list.get(i).setTempsAttente(0);
+					_ev_list.get(i).setListPreneurs(new ArrayList<String>());
 					
 				//Gestion des attentes de bids
 				}else if(_ev_list.get(i).getStep()==Step.wait_for_bid && _ev_list.get(i).getTempsAttente()>_time_wait_for_bid){
@@ -171,6 +149,7 @@ public class Vendeur extends Agent {
 					  		ACLMessage msgToPreneur = new ACLMessage(ACLMessage.INFORM);
 					  		msgToPreneur.addReceiver(receiver); 
 					  		contMsg = String.valueOf(MessageType.TO_ATTRIBUTE)+_ev_list.get(i).toMessageString();
+					  		msgToPreneur.setContent(contMsg);
 							send(msgToPreneur);
 							
 							//Passage a l'etat final
@@ -263,9 +242,7 @@ public class Vendeur extends Agent {
 								
 								//On supprime l'offre
 								EnchereVendeurTable ev = _vendeurGUI.getEnchereVendeurTable();
-								//int evPos = _ev_list.get(e_pos).getEnchereVendeurPosition(_encheres);
 								ev.removeEnchere(e_pos);
-								
 							}else{
 								System.out.println("Vendeur ** ERREUR ** "+getAID().getName()+" : nombre de preneurs incoherent.");
 								_ev_list.get(e_pos).setStep(Step.to_announce);

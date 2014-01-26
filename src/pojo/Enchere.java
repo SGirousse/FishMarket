@@ -2,6 +2,14 @@ package pojo;
 
 import java.util.List;
 
+
+/**
+ * Enchere est une classe definissant une enchere et permettant de la manipuler
+ * tant au niveau Preneur et Vendeur que Marche.
+ * 
+ * @author simeon
+ *
+ */
 public class Enchere implements Comparable<Enchere>{
 	private String _name;
 	private float _init_price;

@@ -3,6 +3,15 @@ package pojo;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * EnchereVendeur permet de manipuler des enchere de type Enchere en ajoutant 
+ * une surcouche propre au vendeur et facilitant leur manipulation : y sont
+ * conserves des informations sur les bids (temps attente, Preneur interesse) et
+ * l'etape de manipulation ( Step ) courante de l'enchere. 
+ * 
+ * @author simeon
+ *
+ */
 public class EnchereVendeur extends Enchere {
 
 	private List<String> _list_preneurs;
