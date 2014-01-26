@@ -28,8 +28,7 @@ public class Preneur extends Agent {
 	  		System.out.println("Preneur ** TRACE ** "+getAID().getName()+" : Arrivee de l'acheteur");
 	  		
 	  		_marche = new AID((String)args[0], AID.ISLOCALNAME);
-	  		//_money = Float.valueOf((String)args[1]);
-	  		_money = 150.f;
+	  		_money = Float.valueOf((String)args[1]);
 	  		
 	  		_encheres = new ArrayList<Enchere>();
 	  		
